@@ -3437,12 +3437,30 @@ var ReplSetTest = function(opts) {
         var conf = asCluster(conn, () => _replSetGetConfig(conn));
         print('Recreating replica set from config ' + tojson(conf));
 
+        _useBridge = opts.useBridge || true;
+        _bridgeOptions = opts.bridgeOptions || {};
+
         var existingNodes = conf.members.map(member => member.host);
-        self.ports = existingNodes.map(node => node.split(':')[1]);
-        self.nodes = existingNodes.map(node => new Mongo(node));
+
+        if (_useBridge) {
+            self.ports = existingNodes.map(node => node.split(':')[1]);
+            _unbridgedPorts = existingNodes.map(node => node.split(':')[1] + 10);
+            _unbridgedNodes = [];
+        } else {
+            self.ports = existingNodes.map(node => node.split(':')[1]);
+        }
+
         self.waitForKeys = false;
         self.host = existingNodes[0].split(':')[0];
         self.name = conf._id;
+
+        // self.nodes = existingNodes.map(node => new Mongo(node));
+        self.nodes = existingNodes.map(node => new MongoBridge({hostName: self.host, port: node.split(':')[1], dest: node.split(':')[0] + ":" + node.split(':')[1] + 10}));
+
+        self.nodes.forEach(function(node) {
+            node.connectToBridge();
+        });
+
     }
 
     if (typeof opts === 'string' || opts instanceof String) {
