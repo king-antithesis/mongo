@@ -3455,7 +3455,7 @@ var ReplSetTest = function(opts) {
         self.name = conf._id;
 
         // self.nodes = existingNodes.map(node => new Mongo(node));
-        self.nodes = existingNodes.map(node => new MongoBridge({hostName: self.host, port: node.split(':')[1], dest: node.split(':')[0] + ":" + node.split(':')[1] + 10}));
+        self.nodes = existingNodes.map(node => new MongoBridge({hostName: self.host, port: node.split(':')[1], dest: node.split(':')[0] + ":" + eval(node.split(':')[1] + 10), connectExistingBridge: true}));
 
         self.nodes.forEach(function(node) {
             node.connectToBridge();
