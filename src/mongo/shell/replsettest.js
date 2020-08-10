@@ -3444,7 +3444,7 @@ var ReplSetTest = function(opts) {
 
         if (_useBridge) {
             self.ports = existingNodes.map(node => node.split(':')[1]);
-            _unbridgedPorts = existingNodes.map(node => node.split(':')[1] + 10);
+            _unbridgedPorts = existingNodes.map(node => eval(node.split(':')[1] + 10));
             _unbridgedNodes = [];
         } else {
             self.ports = existingNodes.map(node => node.split(':')[1]);
@@ -3455,7 +3455,7 @@ var ReplSetTest = function(opts) {
         self.name = conf._id;
 
         // self.nodes = existingNodes.map(node => new Mongo(node));
-        self.nodes = existingNodes.map(node => new MongoBridge({hostName: self.host, port: node.split(':')[1], dest: node.split(':')[0] + ":" + eval(node.split(':')[1] + 10), connectExistingBridge: true}));
+        self.nodes = existingNodes.map(node => new MongoBridge({hostName: node.split(':')[0], port: node.split(':')[1], dest: node.split(':')[0] + ":" + eval(node.split(':')[1] + 10), connectExistingBridge: true}));
 
         self.nodes.forEach(function(node) {
             node.connectToBridge();
