@@ -513,6 +513,13 @@ var ReplSetTest = function(opts) {
             }
         }
 
+        for (i = 0; i < this.nodes.length; i++) {
+            if (this.nodes[i].host == node.host) {
+                jsTestLog(`matched host ${node.host}`);
+                return i;
+            }
+        }
+
         if (node instanceof ObjectId) {
             for (i = 0; i < this.nodes.length; i++) {
                 if (this.nodes[i].runId == node) {
@@ -3445,7 +3452,16 @@ var ReplSetTest = function(opts) {
         if (_useBridge) {
             self.ports = existingNodes.map(node => node.split(':')[1]);
             _unbridgedPorts = existingNodes.map(node => eval(parseInt(node.split(':')[1]) + 10));
-            _unbridgedNodes = [];
+            _unbridgedNodes = existingNodes.map(node => {
+                let m = new Mongo(node);
+                var latestStartUpLog =
+                    m.getDB("local").startup_log.find().sort({$natural: -1}).limit(1).next();
+                m.pid = latestStartUpLog.pid;
+                // Use the *unbridged* port number.
+                m.port = parseInt(node.split(':')[1]) + 10;
+                jsTestLog(`Add ${m}, pid = ${m.pid}, port = ${m.port}`);
+                return m;
+            });
         } else {
             self.ports = existingNodes.map(node => node.split(':')[1]);
         }
